@@ -29,6 +29,8 @@ export const hueOf = (x: string) => {
 };
 
 export const fmtNo = (n: number) => 'ZET-' + String(n).padStart(3, '0');
+/** A–Z by name, ignoring titles ("Dr. Puneet" sorts under P). */
+const sortKey = (full: string) => String(full || '').trim().split(/\s+/).filter((w) => !PREFIX.test(w)).join(' ');
 export const byName = (a: { fullName: string }, b: { fullName: string }) =>
-  shortName(a.fullName).localeCompare(shortName(b.fullName), 'en', { sensitivity: 'base' }) ||
+  sortKey(a.fullName).localeCompare(sortKey(b.fullName), 'en', { sensitivity: 'base' }) ||
   a.fullName.localeCompare(b.fullName, 'en', { sensitivity: 'base' });

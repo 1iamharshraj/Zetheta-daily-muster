@@ -30,6 +30,10 @@ export function SignInForm({ notice }: { notice?: string }) {
   const [role, setRole] = useState<'employee' | 'hr'>('employee');
   const [first, setFirst] = useState(false);
   const [show, setShow] = useState(false);
+  // Controlled so a failed attempt doesn't wipe what was typed (React resets forms after an action).
+  const [email, setEmail] = useState('');
+  const [name, setName] = useState('');
+  const [code, setCode] = useState('');
   const [sState, sAction, sPending] = useActionState(signIn, undefined);
   const [rState, rAction, rPending] = useActionState(register, undefined);
   const err = first ? rState?.error : sState?.error;
@@ -48,17 +52,17 @@ export function SignInForm({ notice }: { notice?: string }) {
       </div>
       <input type="hidden" name="role" value={role} />
       <label className="fl">{first ? 'Email ID' : 'Email ID or employee code'}
-        <input name="email" type={first ? 'email' : 'text'} autoComplete={first ? 'email' : 'username'} autoCapitalize="none" required
+        <input name="email" value={email} onChange={(e) => setEmail(e.target.value)} type={first ? 'email' : 'text'} autoComplete={first ? 'email' : 'username'} autoCapitalize="none" required
           placeholder={first ? 'name@zetheta.com or name@gmail.com' : 'name@zetheta.com or ZET-012'} />
       </label>
       {first && (
         <label className="fl">Full name
-          <input name="name" type="text" autoComplete="name" maxLength={60} placeholder="As in your documents, e.g. Krish Shah" />
+          <input name="name" value={name} onChange={(e) => setName(e.target.value)} type="text" autoComplete="name" maxLength={60} placeholder="As in your documents, e.g. Krish Shah" />
         </label>
       )}
       {first && (
         <label className="fl"><span>{role === 'hr' ? 'HR code' : 'Employee code'} <span className="opt">(optional)</span></span>
-          <input name="code" type="text" maxLength={10} placeholder="ZET-000" autoComplete="off" />
+          <input name="code" value={code} onChange={(e) => setCode(e.target.value)} type="text" maxLength={10} placeholder="ZET-000" autoComplete="off" />
         </label>
       )}
       <label className="fl">Password
