@@ -1,0 +1,9 @@
+{
+  "name": "Zetheta Daily Muster",
+  "short_name": "Muster",
+  "start_url": "/home",
+  "display": "standalone",
+  "background_color": "#F7F9FB",
+  "theme_color": "#175F7F",
+  "icons": [{ "src": "/logo.png", "sizes": "103x112", "type": "image/png" }]
+}
