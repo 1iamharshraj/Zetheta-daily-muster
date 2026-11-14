@@ -1,7 +1,9 @@
 import type { Metadata, Viewport } from 'next';
 import './v1.css';
 import './extra.css';
+import { cookies } from 'next/headers';
 import { ToastProvider } from '@/components/ui';
+import { THEME_COOKIE } from '@/lib/theme';
 
 export const metadata: Metadata = {
   title: 'Zetheta Daily Muster',
@@ -11,9 +13,10 @@ export const metadata: Metadata = {
 };
 export const viewport: Viewport = { width: 'device-width', initialScale: 1, viewportFit: 'cover', themeColor: '#175F7F' };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const theme = (await cookies()).get(THEME_COOKIE)?.value;
   return (
-    <html lang="en">
+    <html lang="en" data-theme={theme === 'light' || theme === 'dark' ? theme : undefined} suppressHydrationWarning>
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />

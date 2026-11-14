@@ -14,9 +14,9 @@ const ICON: Record<string, string> = {camera:'<path d="M4 8h3l2-3h6l2 3h3a1 1 0 
  clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
  flag:'<path d="M5 21V4h12l-2 4 2 4H5"/>',
  chev:'<path d="m9 6 6 6-6 6"/>',
- help:'<circle cx="12" cy="12" r="9"/><path d="M9.6 9.2a2.5 2.5 0 1 1 3.4 2.3c-.6.3-1 .8-1 1.5v.5M12 17h.01"/>'};
+ help:'<circle cx="12" cy="12" r="9"/><path d="M9.6 9.2a2.5 2.5 0 1 1 3.4 2.3c-.6.3-1 .8-1 1.5v.5M12 17h.01"/>',sun:'<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',moon:'<path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/>',auto:'<rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/>'};
 
-export type IconName = 'camera' | 'check' | 'lock' | 'plus' | 'x' | 'eye' | 'eyeoff' | 'edit' | 'menu' | 'out' | 'user' | 'shield' | 'folder' | 'dl' | 'home' | 'cal' | 'leave' | 'goal' | 'pulse' | 'table' | 'chat' | 'gear' | 'book' | 'clock' | 'flag' | 'chev' | 'help';
+export type IconName = 'sun' | 'moon' | 'auto' | 'camera' | 'check' | 'lock' | 'plus' | 'x' | 'eye' | 'eyeoff' | 'edit' | 'menu' | 'out' | 'user' | 'shield' | 'folder' | 'dl' | 'home' | 'cal' | 'leave' | 'goal' | 'pulse' | 'table' | 'chat' | 'gear' | 'book' | 'clock' | 'flag' | 'chev' | 'help';
 
 export function Icon({ n, c }: { n: IconName; c?: string }) {
   return (
