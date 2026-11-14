@@ -34,13 +34,14 @@ function LiveClock({ serverNow }: { serverNow: number }) {
   return <div className="bigclock sm">{n ? fTS.format(n).toUpperCase() : ''}</div>;
 }
 
-export function TeamClient({ d, today, serverNow, rows, attn }: { d: string; today: string; serverNow: number; rows: PulseRow[]; attn: Attn[] | null }) {
+export function TeamClient({ d, today, serverNow, rows, attn, workday = true }: { d: string; today: string; serverNow: number; rows: PulseRow[]; attn: Attn[] | null; workday?: boolean }) {
   const [tf, setTf] = useState<F | null>(null);
   const router = useRouter();
   const { run } = useAction();
   const c = Object.fromEntries((['office', 'meeting', 'remote', 'late', 'missing', 'leave'] as F[]).map((k) => [k, rows.filter((r) => r.f[k]).length])) as Record<F, number>;
   const present = c.office + c.meeting + c.remote;
-  const expected = rows.filter((r) => r.chip[0] !== 'Not working today' && r.chip[0] !== 'Not signed in yet' && !r.f.leave).length || rows.length;
+  // On weekends/holidays only the people who chose to work count, so the rings stay meaningful.
+  const expected = workday ? rows.filter((r) => r.chip[0] !== 'Not working today' && r.chip[0] !== 'Not signed in yet' && !r.f.leave).length || rows.length : present;
   const pc = (a: number, b: number) => (b ? Math.round((100 * a) / b) : 0);
   const TL: Record<F, string> = { office: 'In office', meeting: 'At meetings / events', remote: 'Home / remote', late: 'Late', missing: d < today ? 'Absent' : 'Not in yet', leave: 'On leave' };
   const shown = tf ? rows.filter((r) => r.f[tf]) : rows;
@@ -55,7 +56,7 @@ export function TeamClient({ d, today, serverNow, rows, attn }: { d: string; tod
       <section className="card hero">
         <div>
           <div className="eyebrow">{d === today ? 'Live · ' : ''}{fmtLong(d)}</div>
-          <div className="hero-n"><b>{present}</b> of {expected} {d === today ? 'working right now' : 'worked that day'}</div>
+          <div className="hero-n">{workday ? <><b>{present}</b> of {expected} {d === today ? 'working right now' : 'worked that day'}</> : <><b>{present}</b> working · not a working day</>}</div>
           <p className="muted">{c.late} late · {c.missing} {d < today ? 'absent' : 'not in yet'} · {c.leave} on leave</p>
           <div className="row gap wrap" style={{ marginTop: 10 }}>
             <Link className="btn sm" href={`/team?d=${addD(d, -1)}`}>← Previous day</Link>
@@ -77,7 +78,7 @@ export function TeamClient({ d, today, serverNow, rows, attn }: { d: string; tod
             <ul className="pulse">{shown.map((r) => (
               <li key={r.id} className="pr clickable" onClick={() => router.push(`/team/${r.id}`)}>
                 <Avatar name={r.name} photo={r.photo} />
-                <span className="pn"><b>{r.name}</b><small>{r.empNo} · {r.role}</small>
+                <span className="pn"><b>{r.name}</b><small>{r.empNo}{r.role ? ` · ${r.role}` : ''}</small>
                   {r.canSpot && (
                     <span className="spot" onClick={(e) => e.stopPropagation()}><span className="note">Spot check:</span>
                       <button className="btn sm" title="Seen in office" onClick={() => run(() => spotCheck(r.id, d, 'yes'))}>Seen</button>

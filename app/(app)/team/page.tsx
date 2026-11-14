@@ -66,7 +66,7 @@ export default async function TeamPage({ searchParams }: { searchParams: Promise
     <>
       <Topbar title="Team overview" />
       <AutoRefresh seconds={30} />
-      <TeamClient d={d} today={today} serverNow={now.getTime()} rows={rows} attn={hr ? attn : null} />
+      <TeamClient d={d} today={today} serverNow={now.getTime()} rows={rows} attn={hr ? attn : null} workday={isWorkday(s, d)} />
     </>
   );
 }
