@@ -239,11 +239,11 @@ function TasksCard({ d, nowM }: { d: D; nowM: number }) {
           {plan.map((x, j) => (
             <div key={x.id} className={'trow s-' + x.status}>
               <span className="tn">{j + 1}</span>
-              <span className="ttx">{x.text}{x.carried && <> <em className="carried">carried over</em></>}</span>
+              <span className="ttx">{x.text}{x.carried && <> <em className="carried">carried over</em></>}{x.assignedBy && <> <em className="carried assigned">from {x.assignedByName || 'HR'}</em></>}</span>
               <select className={'stsel s-' + x.status} value={x.status} aria-label={`Status of task ${j + 1}`} onChange={(e) => run(() => setTaskStatus(x.id, e.target.value as TaskStatus))}>
                 {(Object.keys(TSTAT) as TaskStatus[]).map((k) => <option key={k} value={k}>{TSTAT[k].l}</option>)}
               </select>
-              <button className="x" onClick={() => run(() => deleteTask(x.id))} aria-label={`Remove task ${j + 1}`}>×</button>
+              {x.assignedBy ? <span className="x" aria-hidden="true" title="Assigned by HR, so it can’t be removed" /> : <button className="x" onClick={() => run(() => deleteTask(x.id))} aria-label={`Remove task ${j + 1}`}>×</button>}
             </div>
           ))}
         </div>

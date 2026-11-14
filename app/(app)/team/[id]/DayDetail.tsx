@@ -33,7 +33,7 @@ export function DayDetail({ personId, type, k, i, rec, planned, hr }: { personId
       </div>
       <div className="dr-b">
         {r.meetingNote && <div className="note">At: {r.meetingNote}</div>}
-        {plan.length > 0 && <ul>{plan.map((x, j) => <li key={x.id}>{j + 1}. {x.text} <Chip c={TSTAT[x.status].c}>{TSTAT[x.status].l}</Chip></li>)}</ul>}
+        {plan.length > 0 && <ul>{plan.map((x, j) => <li key={x.id}>{j + 1}. {x.text} {x.assignedBy && <span className="muted">(from {x.assignedByName}) </span>}<Chip c={TSTAT[x.status].c}>{TSTAT[x.status].l}</Chip></li>)}</ul>}
         {r.metrics && Object.keys(r.metrics).some((m) => +r.metrics![m]) && <div className="metricline">{Object.keys(r.metrics).filter((m) => +r.metrics![m]).map((m) => `${MSHORT[m] || m} ${r.metrics![m]}`).join(' · ')}</div>}
         {r.eod && <div className="quote">{r.eod}</div>}
         {r.blocker?.text && <div className="blocker"><b>Blocker{r.blocker.resolved ? ' (resolved)' : ''}:</b> {r.blocker.text}</div>}

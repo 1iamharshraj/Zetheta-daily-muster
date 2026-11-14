@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { requireHr } from '@/lib/auth';
-import { today as getToday, getSettings, loadDays, getPeople, getAllHr, getLeaves } from '@/lib/data';
+import { today as getToday, getSettings, loadDays, getPeople, getAllHr, getLeaves, getAssigned } from '@/lib/data';
+import { AssignTask, AssignedList } from '@/components/AssignTask';
 import { monthSummary, yearSummary, leaveYearStart, leavePlanned } from '@/lib/rules';
 import { addD, monthOf, addMonth, num } from '@/lib/time';
 import { LKIND } from '@/lib/constants';
@@ -16,7 +17,7 @@ export default async function HrDesk() {
   const ppl = all.filter((p) => p.status === 'active');
   const ids = ppl.map((p) => p.id);
   const from = [leaveYearStart(s, today), addD(today, -31)].sort()[0];
-  const [daysMap, lvs] = await Promise.all([loadDays(ids, from, addD(today, 60)), getLeaves(ids, addD(today, -31), addD(today, 120))]);
+  const [daysMap, lvs, assigned] = await Promise.all([loadDays(ids, from, addD(today, 60)), getLeaves(ids, addD(today, -31), addD(today, 120)), getAssigned(addD(today, -14), addD(today, 90))]);
   const byId = new Map(ppl.map((p) => [p.id, p]));
   const nm = (id: number) => shortName(byId.get(id)?.fullName || '');
 
@@ -82,6 +83,10 @@ export default async function HrDesk() {
             ))}</ul>
           </section>
         )}
+        <div className="two" style={{ alignItems: 'start' }}>
+          <AssignTask people={ppl.map((p) => ({ id: p.id, name: shortName(p.fullName) }))} today={today} />
+          <AssignedList today={today} rows={assigned.filter((a) => byId.has(a.personId)).map((a) => ({ ...a, name: nm(a.personId) }))} />
+        </div>
         <HrDeskLists requests={requests} absences={absences} edits={edits}
           upcoming={upcoming.map((l) => ({ id: l.id, personId: l.personId, name: nm(l.personId), photo: byId.get(l.personId)?.photo || null, k: l.date, half: l.half, kind: LKIND[l.kind], reason: l.reason, planned: leavePlanned(l, l.date) }))} />
         <section className="card"><div className="sec-h"><h3>Leave balances</h3><a className="btn sm" href="/api/registers/leave"><Icon n="dl" /> Leave register</a></div>

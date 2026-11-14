@@ -4,14 +4,50 @@ import { and, eq, inArray } from 'drizzle-orm';
 import { db, t } from '@/lib/db';
 import { actionHr } from '@/lib/auth';
 import { audit, dbNow, getSettings } from '@/lib/data';
-import { getDay, upsertDay, liveLeaveOn } from '@/lib/day';
+import { getDay, upsertDay, liveLeaveOn, rid } from '@/lib/day';
+import { shortName } from '@/lib/names';
+import { addD } from '@/lib/time';
 import { computeLate } from '@/lib/rules';
-import { fmtShort, hm2m, isoAt } from '@/lib/time';
+import { fmtShort, hm2m, isoAt, keyOf as keyOfNow } from '@/lib/time';
 import { notifyPerson } from '@/lib/notify';
 import type { LeaveKind, Mode } from '@/lib/db/schema';
 
 type R = { ok?: string; error?: string };
 const person = async (id: number) => (await db.select().from(t.people).where(eq(t.people.id, id)).limit(1))[0];
+
+/** HR/superadmin assigns a task to one or more people for a day (today or later). */
+export async function assignTask(personIds: number[], date: string, text: string): Promise<R> {
+  const me = await actionHr();
+  text = String(text || '').trim().slice(0, 200);
+  if (!text) return { error: 'Describe the task first.' };
+  const today = keyOfNow(await dbNow());
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || date < today || date > addD(today, 90)) return { error: 'Pick today or a day in the next 3 months.' };
+  const ids = [...new Set(personIds.map(Number))].filter(Boolean);
+  if (!ids.length) return { error: 'Pick who should do it.' };
+  const ppl = await db.select().from(t.people).where(and(inArray(t.people.id, ids), eq(t.people.status, 'active')));
+  if (!ppl.length) return { error: 'Pick who should do it.' };
+  const at = new Date().toISOString();
+  for (const p of ppl) {
+    const day = await getDay(p.id, date);
+    const plan = [...(day?.plan || []), { id: rid(), text, status: 'todo' as const, assignedBy: me.id, assignedByName: shortName(me.fullName), assignedAt: at }];
+    await upsertDay(p.id, date, { plan });
+    await notifyPerson(p.id, `New task from ${shortName(me.fullName)}`, `${text}${date === today ? ' (today)' : ' · ' + fmtShort(date)}`, '/home#sec-tasks');
+  }
+  await audit(me.id, 'task.assign', ppl.length === 1 ? ppl[0].id : null, { to: ppl.map((p) => p.id), date, text });
+  refresh();
+  return { ok: ppl.length === 1 ? `Task assigned to ${shortName(ppl[0].fullName)}.` : `Task assigned to ${ppl.length} people.` };
+}
+
+export async function withdrawTask(personId: number, date: string, taskId: string): Promise<R> {
+  const me = await actionHr();
+  const day = await getDay(personId, date);
+  const task = day?.plan.find((x) => x.id === taskId);
+  if (!task?.assignedBy) return { error: 'That task wasn’t assigned by HR.' };
+  await upsertDay(personId, date, { plan: day!.plan.filter((x) => x.id !== taskId) });
+  await audit(me.id, 'task.withdraw', personId, { date, text: task.text });
+  refresh();
+  return { ok: 'Task withdrawn.' };
+}
 
 /** Spot check: 'no' turns an office check-in into an absence. */
 export async function spotCheck(personId: number, k: string, v: 'yes' | 'no' | null): Promise<R> {

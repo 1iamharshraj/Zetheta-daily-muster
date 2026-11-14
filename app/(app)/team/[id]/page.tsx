@@ -1,7 +1,8 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { requireUser } from '@/lib/auth';
-import { today as getToday, getSettings, loadDays, getPeople, getHr, getWeeks } from '@/lib/data';
+import { today as getToday, getSettings, loadDays, getPeople, getHr, getWeeks, getAssigned } from '@/lib/data';
+import { AssignTask, AssignedList } from '@/components/AssignTask';
 import { monthSummary, yearSummary, weekSummary, leaveYearStart, tPct, tDone, leavePlanned } from '@/lib/rules';
 import { addD, addMonth, fmtMonth, monday, monthOf, num } from '@/lib/time';
 import { shortName } from '@/lib/names';
@@ -22,7 +23,7 @@ export default async function PersonPage({ params, searchParams }: { params: Pro
   const ym = sp.m && /^\d{4}-\d{2}$/.test(sp.m) && sp.m <= cur ? sp.m : cur;
   const hr = me.sessionRole === 'hr';
   const from = [leaveYearStart(s, today), ym + '-01', addD(monday(today), -1)].sort()[0];
-  const [daysMap, hrRec, weeks] = await Promise.all([loadDays([p.id], from, addD(today, 120)), getHr(p.id), getWeeks([p.id], monday(today))]);
+  const [daysMap, hrRec, weeks, assigned] = await Promise.all([loadDays([p.id], from, addD(today, 120)), getHr(p.id), getWeeks([p.id], monday(today)), getAssigned(addD(today, -30), addD(today, 90), p.id)]);
   const days = daysMap.get(p.id)!;
   const ms = monthSummary(s, p, days, ym, today);
   const yr = yearSummary(s, p, days, today, +(hrRec?.job?.openingEL || 0));
@@ -76,6 +77,12 @@ export default async function PersonPage({ params, searchParams }: { params: Pro
             <Link className="link" href="/reviews">All weekly reviews →</Link>
           </section>
         </div>
+        {hr && p.status === 'active' && (
+          <div className="two" style={{ alignItems: 'start' }}>
+            <AssignTask people={[]} today={today} fixed={{ id: p.id, name }} />
+            <AssignedList today={today} showName={false} title={`Tasks assigned to ${name}`} rows={assigned.map((a) => ({ ...a, name }))} />
+          </div>
+        )}
         <section className="card"><div className="sec-h"><h3>Day by day</h3></div>
           {list.length ? list.map((x) => <DayDetail key={x.k} personId={p.id} type={p.type} k={x.k} i={x.i} rec={x.rec} planned={x.planned} hr={hr} />) : <p className="note">Nothing recorded this month yet.</p>}
         </section>

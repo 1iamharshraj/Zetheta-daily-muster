@@ -92,3 +92,12 @@ export async function audit(actorId: number | null, action: string, targetId: nu
 }
 
 export const notMe = (id: number) => ne(t.people.id, id);
+
+/** Tasks HR assigned, between two dates, for some or all people. */
+export async function getAssigned(from: string, to: string, personId?: number) {
+  const conds = [gte(t.dayLogs.date, from), lte(t.dayLogs.date, to), sql`exists (select 1 from jsonb_array_elements(${t.dayLogs.plan}) e where e ? 'assignedBy')`];
+  if (personId) conds.push(eq(t.dayLogs.personId, personId));
+  const rows = await db.select({ personId: t.dayLogs.personId, date: t.dayLogs.date, plan: t.dayLogs.plan }).from(t.dayLogs).where(and(...conds));
+  return rows.flatMap((r) => r.plan.filter((x) => x.assignedBy).map((x) => ({ personId: r.personId, date: r.date, id: x.id, text: x.text, status: x.status, by: x.assignedByName || 'HR' })))
+    .sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0));
+}

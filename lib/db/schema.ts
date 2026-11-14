@@ -43,7 +43,11 @@ export const sessions = pgTable('sessions', {
 });
 
 export type TaskStatus = 'todo' | 'doing' | 'hold' | 'blocked' | 'done';
-export type Task = { id: string; text: string; status: TaskStatus; carried?: boolean };
+export type Task = {
+  id: string; text: string; status: TaskStatus; carried?: boolean;
+  /** Set when HR/superadmin assigned the task. The employee can update its status but not delete it. */
+  assignedBy?: number; assignedByName?: string; assignedAt?: string;
+};
 export type Mode = 'office' | 'wfh' | 'remote' | 'meeting';
 export type LateStatus = 'none' | 'late' | 'severe' | 'exempt';
 export type DayEdit = {

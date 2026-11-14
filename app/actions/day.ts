@@ -4,7 +4,7 @@ import { and, eq, inArray } from 'drizzle-orm';
 import { db, t } from '@/lib/db';
 import { actionUser } from '@/lib/auth';
 import { dbNow, getSettings } from '@/lib/data';
-import { getDay, upsertDay, liveLeaveOn, carryCandidates, snapshot, rid } from '@/lib/day';
+import { getDay, upsertDay, liveLeaveOn, carryCandidates, snapshot, rid, carryTask } from '@/lib/day';
 import { computeLate, isWorkday } from '@/lib/rules';
 import { keyOf, tLabel, isoAt, hm2m, minsOf, addD, addMonth, monthOf, fmtShort } from '@/lib/time';
 import { METRICS } from '@/lib/constants';
@@ -38,7 +38,7 @@ export async function clockIn(mode: Mode, note: string): Promise<R> {
   let plan = day?.plan || [];
   if (!plan.length) {
     const cf = await carryCandidates(me.id, today);
-    plan = cf.items.map((x) => ({ id: rid(), text: x.text, status: x.status as TaskStatus, carried: true }));
+    plan = cf.items.map(carryTask);
   }
   await upsertDay(me.id, today, { mode, checkInAt: nowIso, checkInSrc: 'server', meetingNote: mode === 'meeting' ? note : null, plan, intent: null, ...late });
   refresh();
@@ -89,6 +89,9 @@ export async function setTaskStatus(id: string, status: TaskStatus): Promise<R> 
   return {};
 }
 export async function deleteTask(id: string): Promise<R> {
+  const { me, today } = await ctx();
+  const t = (await getDay(me.id, today))?.plan.find((x) => x.id === id);
+  if (t?.assignedBy) return { error: `This task was assigned by ${t.assignedByName || 'HR'}. Mark its status instead, or ask them to withdraw it.` };
   await editPlan((p) => p.filter((x) => x.id !== id));
   return {};
 }
@@ -96,7 +99,7 @@ export async function carryOver(): Promise<R> {
   const { me, today } = await ctx();
   const cf = await carryCandidates(me.id, today);
   if (!cf.items.length) return { error: 'Nothing to carry over.' };
-  await editPlan((p) => [...p, ...cf.items.map((x) => ({ id: rid(), text: x.text, status: x.status as TaskStatus, carried: true }))]);
+  await editPlan((p) => [...p, ...cf.items.map(carryTask)]);
   return { ok: `Brought ${cf.items.length} open task${cf.items.length > 1 ? 's' : ''} from ${fmtShort(cf.from!)}.` };
 }
 

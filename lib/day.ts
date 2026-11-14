@@ -2,6 +2,13 @@ import 'server-only';
 import { and, desc, eq, inArray, lt, sql } from 'drizzle-orm';
 import { db, t } from './db';
 import type { DayLog } from './data';
+import type { Task } from './db/schema';
+
+/** Copy of an open task for carry-over; keeps who assigned it. */
+export const carryTask = (x: Task): Task => ({
+  id: Math.random().toString(36).slice(2, 9), text: x.text, status: x.status, carried: true,
+  ...(x.assignedBy ? { assignedBy: x.assignedBy, assignedByName: x.assignedByName, assignedAt: x.assignedAt } : {}),
+});
 
 export type DayPatch = Partial<Omit<typeof t.dayLogs.$inferInsert, 'personId' | 'date'>>;
 
@@ -27,7 +34,7 @@ export async function carryCandidates(personId: number, before: string) {
   const r = await db.select({ date: t.dayLogs.date, plan: t.dayLogs.plan }).from(t.dayLogs)
     .where(and(eq(t.dayLogs.personId, personId), lt(t.dayLogs.date, before), sql`jsonb_array_length(${t.dayLogs.plan}) > 0`))
     .orderBy(desc(t.dayLogs.date)).limit(1);
-  if (!r[0]) return { from: null as string | null, items: [] as { text: string; status: string }[] };
+  if (!r[0]) return { from: null as string | null, items: [] as Task[] };
   return { from: r[0].date, items: r[0].plan.filter((x) => x.status !== 'done') };
 }
 
