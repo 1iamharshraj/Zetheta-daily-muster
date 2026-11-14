@@ -1,0 +1,13 @@
+/* v2 additions on top of the v1 stylesheet. */
+a { color: inherit; }
+.auth-switch { text-align: center; font-size: .9rem; color: var(--muted); }
+.err { color: var(--bad); font-size: .88rem; }
+.qr { display: grid; place-items: center; padding: 8px; background: #fff; border-radius: 10px; width: max-content; margin: 0 auto; }
+.qr img { width: 180px; height: 180px; image-rendering: pixelated; }
+.pending-chip { border-style: dashed; }
+.cd.lvpend { outline: 2px dashed var(--info); outline-offset: -3px; }
+.tbl table td .row { flex-wrap: wrap; }
+.temp-pw { font-size: 1.3rem; letter-spacing: .08em; padding: 10px 14px; background: var(--sunk); border-radius: 8px; text-align: center; user-select: all; }
+/* Roster rows: v2 has More/Save buttons in the last column instead of a single × */
+@media (min-width: 900px) { .rrow { grid-template-columns: 1fr 1.2fr 1.4fr 88px 110px 70px auto; } }
+@media (max-width: 899px) { .rrow { grid-template-columns: 1fr 1fr; } }
